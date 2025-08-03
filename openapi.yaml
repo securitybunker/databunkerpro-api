@@ -30,8 +30,6 @@ info:
 servers:
   - url: http://localhost:3000
     description: Local development server
-  - url: https://api.databunker.com
-    description: Production API server
 
 security:
   - XBunkerToken: []
