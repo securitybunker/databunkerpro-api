@@ -1998,48 +1998,6 @@ paths:
                     type: string
                     description: The created access token
 
-
-                  description: UUID from bulk list unlock
-                groupid:
-                  type: integer
-                  description: ID of the group
-                groupname:
-                  type: string
-                  description: Name of the group
-                offset:
-                  type: integer
-                  default: 0
-                  description: Offset for pagination
-                limit:
-                  type: integer
-                  default: 10
-                  description: Limit for pagination
-                request_metadata:
-                  type: object
-                  description: Additional metadata for the request
-      responses:
-        '200':
-          description: Group users listed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "ok"
-                  rows:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        token:
-                          type: string
-                          description: User's unique token
-                        profile:
-                          type: object
-                          description: User profile information
-
   # ========================================
   # AUDIT MANAGEMENT
   # ========================================
