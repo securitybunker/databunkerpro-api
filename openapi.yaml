@@ -1317,61 +1317,6 @@ paths:
                   status:
                     type: string
                     example: "ok"
-    post:
-      summary: Accept agreement
-      description: Records user's acceptance of a legal basis/agreement
-      tags: [Agreement Management]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [mode, identity, brief]
-              properties:
-                mode:
-                  type: string
-                  enum: [login, token, email, phone, custom]
-                  description: Mode of user identification
-                identity:
-                  type: string
-                  description: User identifier corresponding to the mode
-                brief:
-                  type: string
-                  description: Unique identifier of the legal basis/agreement
-                agreementmethod:
-                  type: string
-                  description: Method of agreement (e.g., 'web-form', 'checkbox', 'signature')
-                referencecode:
-                  type: string
-                  description: External reference code or identifier
-                starttime:
-                  type: string
-                  description: Start time of the agreement validity (ISO 8601 format)
-                finaltime:
-                  type: string
-                  description: End time of the agreement validity (ISO 8601 format)
-                status:
-                  type: string
-                  enum: [pending, active, expired]
-                  description: Status of the agreement
-                lastmodifiedby:
-                  type: string
-                  description: Identifier of the person/system that last modified this agreement
-                request_metadata:
-                  type: object
-                  description: Additional metadata for the request
-      responses:
-        '200':
-          description: Agreement accepted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "ok"
 
   # ========================================
   # TOKENIZATION MANAGEMENT
