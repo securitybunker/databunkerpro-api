@@ -2,8 +2,8 @@ openapi: 3.0.3
 info:
   title: DataBunker Pro API
   description: |
-    DataBunker Pro is a privacy-compliant user data vault that provides secure storage and management of user data with built-in privacy controls, consent management, and audit capabilities.
-    
+    DataBunker Pro is a privacy-compliant user data vault and tokenization engine that provides secure storage and management of user data with built-in privacy controls, consent management, and audit capabilities.
+
     ## Key Features
     - **User Management**: Create, update, and manage user profiles with privacy controls
     - **Consent Management**: Handle legal basis and user agreements for GDPR/DPDP compliance
@@ -13,10 +13,32 @@ info:
     - **Role-based Access**: Fine-grained access control with policies and roles
     - **Bulk Operations**: Efficient bulk data operations with unlock mechanisms
     - **Connector Support**: Integration with external databases and systems
-    
+
     ## Authentication
     All API calls require authentication via the `X-Bunker-Token` header. For multi-tenant setups, use the `X-Bunker-Tenant` header to specify the tenant context.
-    
+
+    ### Multi-Tenant Usage
+    Multi-tenancy is supported when DataBunker Pro is configured to work with PostgreSQL database.
+
+    When using DataBunker Pro in a multi-tenant environment:
+
+    - **Single Tenant**: Omit the `X-Bunker-Tenant` header (default behavior)
+    - **Multi-Tenant**: Include `X-Bunker-Tenant: your-tenant-name` header
+
+    **Example:**
+    ```bash
+    # Single tenant
+    curl -X POST http://localhost:3000/v2/UserCreate \
+      -H "X-Bunker-Token: your-token" \
+      -d '{"profile":{"login":"user1"}}'
+
+    # Multi-tenant
+    curl -X POST http://localhost:3000/v2/UserCreate \
+      -H "X-Bunker-Token: your-token" \
+      -H "X-Bunker-Tenant: acme-corp" \
+      -d '{"profile":{"login":"user1"}}'
+    ```
+
     ## Base URL
     The API is available at `/v2/` endpoint with all requests using POST method.
   version: 2.0.0
