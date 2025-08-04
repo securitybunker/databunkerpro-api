@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
-  title: DataBunker Pro API
+  title: Databunker Pro API
   description: |
-    DataBunker Pro is a privacy-compliant user data vault and tokenization engine that provides secure storage and management of user data with built-in privacy controls, consent management, and audit capabilities.
+    Databunker Pro is a privacy-compliant user data vault and tokenization engine that provides secure storage and management of user data with built-in privacy controls, consent management, and audit capabilities.
 
     ## Key Features
     - **User Management**: Create, update, and manage user profiles with privacy controls
@@ -43,7 +43,7 @@ info:
     The API is available at `/v2/` endpoint with all requests using POST method.
   version: 2.0.0
   contact:
-    name: DataBunker Support
+    name: Databunker Support
     url: https://databunker.com
   license:
     name: MIT
