@@ -2358,6 +2358,160 @@ paths:
                     type: object
                     description: Shared record data
 
+  # ========================================
+  # SYSTEM OPERATIONS
+  # ========================================
+  /v2/SystemGenerateWrappingKey:
+    post:
+      summary: Generate wrapping key from Shamir's Secret Sharing keys
+      description: Generates a wrapping key from three Shamir's Secret Sharing keys
+      tags: [System Operations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key1, key2, key3]
+              properties:
+                key1:
+                  type: string
+                  description: First Shamir secret sharing key
+                key2:
+                  type: string
+                  description: Second Shamir secret sharing key
+                key3:
+                  type: string
+                  description: Third Shamir secret sharing key
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Wrapping key generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  wrappingkey:
+                    type: string
+                    description: The generated wrapping key
+
+  /v2/SystemGetSystemStats:
+    post:
+      summary: Get system statistics
+      description: Retrieves system statistics including user counts, tenant counts, and other metrics
+      tags: [System Operations]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: System statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  stats:
+                    type: object
+                    properties:
+                      numusers:
+                        type: integer
+                        description: Total number of users in the system
+                      numtenants:
+                        type: integer
+                        description: Total number of tenants
+                      numtokens:
+                        type: integer
+                        description: Total number of tokens
+                      numsessions:
+                        type: integer
+                        description: Total number of active sessions
+
+  /v2/SystemGetUserReport:
+    post:
+      summary: Get user report
+      description: Generates a detailed report for a specific user
+      tags: [System Operations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User report generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  report:
+                    type: object
+                    description: User report data
+
+  /v2/SystemGetUserHTMLReport:
+    post:
+      summary: Get user HTML report
+      description: Generates an HTML report for a specific user
+      tags: [System Operations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User HTML report generated successfully
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML report content
+
 components:
   securitySchemes:
     XBunkerToken:
@@ -2483,4 +2637,6 @@ tags:
   - name: Tenant Management
     description: Operations for managing multi-tenant setups
   - name: Shared Records
-    description: Operations for creating and accessing shared user records 
+    description: Operations for creating and accessing shared user records
+  - name: System Operations
+    description: Operations for system administration and monitoring
