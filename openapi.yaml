@@ -944,6 +944,53 @@ paths:
                           type: object
                           description: User profile information
 
+  /v2/BulkListAllUserRequests:
+    post:
+      summary: List all user requests in bulk
+      description: Lists all user requests using the bulk unlock mechanism with pagination
+      tags: [Bulk Operations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [unlockuuid]
+              properties:
+                unlockuuid:
+                  type: string
+                  description: UUID from bulk list unlock
+                offset:
+                  type: integer
+                  default: 0
+                  description: Offset for pagination
+                limit:
+                  type: integer
+                  default: 10
+                  description: Limit for pagination
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: All user requests listed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  total:
+                    type: integer
+                    description: Total number of user requests found
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      description: User request information
+
   /v2/BulkListAuditEvents:
     post:
       summary: List audit events in bulk
