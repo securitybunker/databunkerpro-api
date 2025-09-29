@@ -407,8 +407,8 @@ paths:
                           type: integer
                           description: Version number
                         optime:
-                          type: string
-                          description: Operation time
+                          type: integer
+                          description: Operation time (Unix timestamp)
                         md5:
                           type: string
                           description: MD5 hash of the version
@@ -1445,8 +1445,8 @@ paths:
                           type: integer
                           description: Version number
                         optime:
-                          type: string
-                          description: Operation time
+                          type: integer
+                          description: Operation time (Unix timestamp)
                         md5:
                           type: string
                           description: MD5 hash of the version
