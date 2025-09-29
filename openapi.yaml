@@ -91,10 +91,10 @@ paths:
                   description: ID of the role to assign the user to
                 slidingtime:
                   type: string
-                  description: Sliding time period for user data retention (e.g., '30d', '1y')
+                  description: Sliding time period for user record retention (e.g., '30d', '1y')
                 finaltime:
                   type: string
-                  description: Absolute expiration time for user data (Unix timestamp format)
+                  description: Absolute expiration time for user record
                 request_metadata:
                   type: object
                   description: Additional metadata for the request
@@ -133,6 +133,9 @@ paths:
                 identity:
                   type: string
                   description: User identifier corresponding to the mode
+                version:
+                  type: integer
+                  description: Specific version of the user profile to retrieve
                 request_metadata:
                   type: object
                   description: Additional metadata for the request
@@ -147,12 +150,29 @@ paths:
                   status:
                     type: string
                     example: "ok"
-                  profile:
-                    type: object
-                    description: User profile information
                   token:
                     type: string
                     description: User's unique token
+                  profile:
+                    type: object
+                    description: User profile information
+                  version:
+                    type: integer
+                    description: User record version
+                  finaltime:
+                    type: integer
+                    description: Final expiration time (Unix timestamp)
+                  slidingtime:
+                    type: integer
+                    description: Sliding expiration time (Unix timestamp)
+                  expirationtime:
+                    type: integer
+                    description: Calculated expiration time (Unix timestamp)
+                  grouproles:
+                    type: array
+                    description: User's group roles
+                    items:
+                      type: object
 
   /v2/UserUpdate:
     post:
@@ -278,6 +298,121 @@ paths:
                     type: string
                     example: "ok"
 
+  /v2/UserSearch:
+    post:
+      summary: Search users
+      description: Searches for users using fuzzy matching
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity, unlockuuid]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier to search for
+                unlockuuid:
+                  type: string
+                  description: UUID from bulk list unlock for search authorization
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Users found successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        token:
+                          type: string
+                          description: User's unique token
+                        profile:
+                          type: object
+                          description: User profile information
+                        version:
+                          type: integer
+                          description: User record version
+                        finaltime:
+                          type: integer
+                          description: Final expiration time (Unix timestamp)
+                        slidingtime:
+                          type: integer
+                          description: Sliding expiration time (Unix timestamp)
+                        expirationtime:
+                          type: integer
+                          description: Calculated expiration time (Unix timestamp)
+                        grouproles:
+                          type: array
+                          description: User's group roles
+                          items:
+                            type: object
+
+  /v2/UserListVersions:
+    post:
+      summary: List user versions
+      description: Lists all versions of a user's profile
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User versions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        version:
+                          type: integer
+                          description: Version number
+                        optime:
+                          type: string
+                          description: Operation time
+                        md5:
+                          type: string
+                          description: MD5 hash of the version
+
   /v2/UserDeleteRequest:
     post:
       summary: Request user deletion
@@ -315,6 +450,162 @@ paths:
                   requestuuid:
                     type: string
                     description: UUID of the deletion request
+
+  /v2/UserRequestGet:
+    post:
+      summary: Get user request
+      description: Retrieves information about a specific user request
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestuuid]
+              properties:
+                requestuuid:
+                  type: string
+                  description: UUID of the user request
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User request retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  request:
+                    type: object
+                    description: User request information
+
+  /v2/UserRequestCancel:
+    post:
+      summary: Cancel user request
+      description: Cancels a pending user request
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestuuid]
+              properties:
+                requestuuid:
+                  type: string
+                  description: UUID of the user request
+                reason:
+                  type: string
+                  description: Reason for cancellation
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User request cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/UserRequestApprove:
+    post:
+      summary: Approve user request
+      description: Approves a pending user request
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestuuid]
+              properties:
+                requestuuid:
+                  type: string
+                  description: UUID of the user request
+                reason:
+                  type: string
+                  description: Reason for approval
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User request approved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/UserRequestListUserRequests:
+    post:
+      summary: List user requests
+      description: Lists all requests for a specific user
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                offset:
+                  type: integer
+                  default: 0
+                  description: Offset for pagination
+                limit:
+                  type: integer
+                  default: 10
+                  description: Limit for pagination
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        requestuuid:
+                          type: string
+                          description: UUID of the request
+                        requesttype:
+                          type: string
+                          description: Type of the request
 
   /v2/UserUpdateRequest:
     post:
@@ -445,8 +736,92 @@ paths:
 
   /v2/BulkListUsers:
     post:
-      summary: List users in bulk
-      description: Lists users using the bulk unlock mechanism
+      summary: List specific users in bulk
+      description: Lists specific users using the bulk unlock mechanism with user search criteria
+      tags: [Bulk Operations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [unlockuuid, users]
+              properties:
+                unlockuuid:
+                  type: string
+                  description: UUID from bulk list unlock
+                users:
+                  type: array
+                  description: Array of user search criteria
+                  items:
+                    type: object
+                    required: [mode, identity]
+                    properties:
+                      mode:
+                        type: string
+                        enum: [email, phone, login, custom]
+                        description: Search mode for the user identity
+                      identity:
+                        type: string
+                        description: User identity to search for (email, phone, login, or custom value)
+                offset:
+                  type: integer
+                  default: 0
+                  description: Offset for pagination
+                limit:
+                  type: integer
+                  default: 10
+                  description: Limit for pagination
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Users listed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  total:
+                    type: integer
+                    description: Total number of users found
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        token:
+                          type: string
+                          description: User's unique token
+                        profile:
+                          type: object
+                          description: User profile information
+                        version:
+                          type: integer
+                          description: User record version
+                        finaltime:
+                          type: integer
+                          description: Final expiration time (Unix timestamp)
+                        slidingtime:
+                          type: integer
+                          description: Sliding expiration time (Unix timestamp)
+                        expirationtime:
+                          type: integer
+                          description: Calculated expiration time (Unix timestamp)
+                        grouproles:
+                          type: array
+                          description: User's group roles
+                          items:
+                            type: object
+
+  /v2/BulkListAllUsers:
+    post:
+      summary: List all users in bulk
+      description: Lists all users using the bulk unlock mechanism with pagination
       tags: [Bulk Operations]
       requestBody:
         required: true
@@ -472,7 +847,7 @@ paths:
                   description: Additional metadata for the request
       responses:
         '200':
-          description: Users listed successfully
+          description: All users listed successfully
           content:
             application/json:
               schema:
@@ -481,6 +856,9 @@ paths:
                   status:
                     type: string
                     example: "ok"
+                  total:
+                    type: integer
+                    description: Total number of users found
                   rows:
                     type: array
                     items:
@@ -492,6 +870,23 @@ paths:
                         profile:
                           type: object
                           description: User profile information
+                        version:
+                          type: integer
+                          description: User record version
+                        finaltime:
+                          type: integer
+                          description: Final expiration time (Unix timestamp)
+                        slidingtime:
+                          type: integer
+                          description: Sliding expiration time (Unix timestamp)
+                        expirationtime:
+                          type: integer
+                          description: Calculated expiration time (Unix timestamp)
+                        grouproles:
+                          type: array
+                          description: User's group roles
+                          items:
+                            type: object
 
   /v2/BulkListGroupUsers:
     post:
@@ -734,10 +1129,10 @@ paths:
                         description: ID of the role to assign the user to
                 slidingtime:
                   type: string
-                  description: Global sliding time period for all users
+                  description: Sliding time period for all users in bulk
                 finaltime:
                   type: string
-                  description: Global expiration time for all users (Unix timestamp format)
+                  description: Expiration time for all users in bulk
                 request_metadata:
                   type: object
                   description: Additional metadata for the request
@@ -832,6 +1227,9 @@ paths:
                 appname:
                   type: string
                   description: Name of the application
+                version:
+                  type: integer
+                  description: Specific version of the app data to retrieve
                 request_metadata:
                   type: object
                   description: Additional metadata for the request
@@ -963,6 +1361,96 @@ paths:
                       type: string
                     description: List of application names for the user
 
+  /v2/AppdataDelete:
+    post:
+      summary: Delete application data for user
+      description: Deletes application-specific data for a user
+      tags: [App Data Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity, appname]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                appname:
+                  type: string
+                  description: Name of the application
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: App data deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/AppdataListVersions:
+    post:
+      summary: List app data versions
+      description: Lists all versions of application data for a user
+      tags: [App Data Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity, appname]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                appname:
+                  type: string
+                  description: Name of the application
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: App data versions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  versions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        version:
+                          type: integer
+                          description: Version number
+                        optime:
+                          type: string
+                          description: Operation time
+                        md5:
+                          type: string
+                          description: MD5 hash of the version
+
   /v2/AppdataUpdateRequest:
     post:
       summary: Request app data update
@@ -1063,6 +1551,130 @@ paths:
                   status:
                     type: string
                     example: "ok"
+
+  /v2/LegalBasisUpdate:
+    post:
+      summary: Update legal basis
+      description: Updates an existing legal basis
+      tags: [Legal Basis Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [brief, newbrief]
+              properties:
+                brief:
+                  type: string
+                  description: Current identifier for the legal basis
+                newbrief:
+                  type: string
+                  description: New identifier for the legal basis
+                status:
+                  type: string
+                  enum: [active, inactive]
+                  description: Status of the legal basis
+                module:
+                  type: string
+                  description: Module this legal basis applies to
+                fulldesc:
+                  type: string
+                  description: Full description of the legal basis
+                shortdesc:
+                  type: string
+                  description: Short description of the legal basis
+                basistype:
+                  type: string
+                  description: Type of legal basis
+                requiredmsg:
+                  type: string
+                  description: Required message for users
+                requiredflag:
+                  type: boolean
+                  description: Whether this legal basis is required
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Legal basis updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/LegalBasisDelete:
+    post:
+      summary: Delete legal basis
+      description: Deletes a legal basis
+      tags: [Legal Basis Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [brief]
+              properties:
+                brief:
+                  type: string
+                  description: Unique identifier for the legal basis
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Legal basis deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/LegalBasisListAgreements:
+    post:
+      summary: List legal basis agreements
+      description: Lists all legal basis agreements in the system
+      tags: [Legal Basis Management]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Legal basis agreements retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        brief:
+                          type: string
+                          description: Legal basis identifier
+                        status:
+                          type: string
+                          description: Status of the legal basis
 
   /v2/AgreementAccept:
     post:
@@ -1319,6 +1931,698 @@ paths:
                     example: "ok"
 
   # ========================================
+  # PROCESSING ACTIVITY MANAGEMENT
+  # ========================================
+  /v2/ProcessingActivityCreate:
+    post:
+      summary: Create processing activity
+      description: Creates a new processing activity
+      tags: [Processing Activity Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activity]
+              properties:
+                activity:
+                  type: string
+                  description: Unique identifier for the processing activity
+                title:
+                  type: string
+                  description: Title of the processing activity
+                script:
+                  type: string
+                  description: Script or description of the activity
+                fulldesc:
+                  type: string
+                  description: Full description of the processing activity
+                applicableto:
+                  type: string
+                  description: Who this activity applies to
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Processing activity created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/ProcessingActivityUpdate:
+    post:
+      summary: Update processing activity
+      description: Updates an existing processing activity
+      tags: [Processing Activity Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activity, newactivity]
+              properties:
+                activity:
+                  type: string
+                  description: Current identifier for the processing activity
+                newactivity:
+                  type: string
+                  description: New identifier for the processing activity
+                title:
+                  type: string
+                  description: Title of the processing activity
+                script:
+                  type: string
+                  description: Script or description of the activity
+                fulldesc:
+                  type: string
+                  description: Full description of the processing activity
+                applicableto:
+                  type: string
+                  description: Who this activity applies to
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Processing activity updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/ProcessingActivityDelete:
+    post:
+      summary: Delete processing activity
+      description: Deletes a processing activity
+      tags: [Processing Activity Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activity]
+              properties:
+                activity:
+                  type: string
+                  description: Unique identifier for the processing activity
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Processing activity deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/ProcessingActivityLinkLegalBasis:
+    post:
+      summary: Link processing activity to legal basis
+      description: Links a processing activity to a legal basis
+      tags: [Processing Activity Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activity, brief]
+              properties:
+                activity:
+                  type: string
+                  description: Unique identifier for the processing activity
+                brief:
+                  type: string
+                  description: Unique identifier for the legal basis
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Processing activity linked to legal basis successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/ProcessingActivityUnlinkLegalBasis:
+    post:
+      summary: Unlink processing activity from legal basis
+      description: Unlinks a processing activity from a legal basis
+      tags: [Processing Activity Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [activity, brief]
+              properties:
+                activity:
+                  type: string
+                  description: Unique identifier for the processing activity
+                brief:
+                  type: string
+                  description: Unique identifier for the legal basis
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Processing activity unlinked from legal basis successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/ProcessingActivityListActivities:
+    post:
+      summary: List processing activities
+      description: Lists all processing activities in the system
+      tags: [Processing Activity Management]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Processing activities retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        activity:
+                          type: string
+                          description: Processing activity identifier
+                        title:
+                          type: string
+                          description: Title of the processing activity
+
+  # ========================================
+  # CONNECTOR MANAGEMENT
+  # ========================================
+  /v2/ConnectorListSupportedConnectors:
+    post:
+      summary: List supported connectors
+      description: Lists all supported connector types
+      tags: [Connector Management]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Supported connectors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  connectors:
+                    type: array
+                    items:
+                      type: string
+                      description: Connector type name
+
+  /v2/ConnectorListConnectors:
+    post:
+      summary: List connectors
+      description: Lists all configured connectors
+      tags: [Connector Management]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Connectors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        connectorid:
+                          type: integer
+                          description: ID of the connector
+                        connectorname:
+                          type: string
+                          description: Name of the connector
+                        connectortype:
+                          type: string
+                          description: Type of the connector
+
+  /v2/ConnectorCreate:
+    post:
+      summary: Create connector
+      description: Creates a new connector
+      tags: [Connector Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [connectorname, connectortype, apikey]
+              properties:
+                connectorname:
+                  type: string
+                  description: Name of the connector
+                connectortype:
+                  type: string
+                  description: Type of the connector
+                apikey:
+                  type: string
+                  description: API key for the connector
+                connectordesc:
+                  type: string
+                  description: Description of the connector
+                username:
+                  type: string
+                  description: Username for database connection
+                dbhost:
+                  type: string
+                  description: Database host
+                dbport:
+                  type: string
+                  description: Database port
+                dbname:
+                  type: string
+                  description: Database name
+                tablename:
+                  type: string
+                  description: Table name
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Connector created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  connectorid:
+                    type: integer
+                    description: ID of the created connector
+
+  /v2/ConnectorUpdate:
+    post:
+      summary: Update connector
+      description: Updates an existing connector
+      tags: [Connector Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [connectorid]
+              properties:
+                connectorid:
+                  type: integer
+                  description: ID of the connector to update
+                connectorname:
+                  type: string
+                  description: New name of the connector
+                connectortype:
+                  type: string
+                  description: New type of the connector
+                connectordesc:
+                  type: string
+                  description: New description of the connector
+                username:
+                  type: string
+                  description: Username for database connection
+                apikey:
+                  type: string
+                  description: API key for the connector
+                status:
+                  type: string
+                  description: Status of the connector
+                dbhost:
+                  type: string
+                  description: Database host
+                dbport:
+                  type: string
+                  description: Database port
+                dbname:
+                  type: string
+                  description: Database name
+                tablename:
+                  type: string
+                  description: Table name
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Connector updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/ConnectorDelete:
+    post:
+      summary: Delete connector
+      description: Deletes a connector
+      tags: [Connector Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [connectorid]
+              properties:
+                connectorid:
+                  type: integer
+                  description: ID of the connector to delete
+                connectorname:
+                  type: string
+                  description: Name of the connector (for verification)
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Connector deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/ConnectorGetUserData:
+    post:
+      summary: Get user data from connector
+      description: Retrieves user data from a specific connector
+      tags: [Connector Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity, connectorid]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                connectorid:
+                  type: integer
+                  description: ID of the connector
+                connectorname:
+                  type: string
+                  description: Name of the connector
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  data:
+                    type: object
+                    description: User data from connector
+
+  /v2/ConnectorGetUserExtraData:
+    post:
+      summary: Get user extra data from connector
+      description: Retrieves additional user data from a specific connector
+      tags: [Connector Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity, connectorid]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                connectorid:
+                  type: integer
+                  description: ID of the connector
+                connectorname:
+                  type: string
+                  description: Name of the connector
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User extra data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  data:
+                    type: object
+                    description: User extra data from connector
+
+  /v2/ConnectorDeleteUser:
+    post:
+      summary: Delete user from connector
+      description: Deletes user data from a specific connector
+      tags: [Connector Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity, connectorid]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                connectorid:
+                  type: integer
+                  description: ID of the connector
+                connectorname:
+                  type: string
+                  description: Name of the connector
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User deleted from connector successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/ConnectorGetTableMetaData:
+    post:
+      summary: Get table metadata from connector
+      description: Retrieves table metadata from a connector
+      tags: [Connector Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [connectorid, apikey, username, connectortype, dbhost, dbport, dbname, tablename]
+              properties:
+                connectorid:
+                  type: integer
+                  description: ID of the connector
+                apikey:
+                  type: string
+                  description: API key for the connector
+                username:
+                  type: string
+                  description: Username for database connection
+                connectortype:
+                  type: string
+                  description: Type of the connector
+                dbhost:
+                  type: string
+                  description: Database host
+                dbport:
+                  type: string
+                  description: Database port
+                dbname:
+                  type: string
+                  description: Database name
+                tablename:
+                  type: string
+                  description: Table name
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Table metadata retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  metadata:
+                    type: object
+                    description: Table metadata
+
+  /v2/ConnectorValidateConnectivity:
+    post:
+      summary: Validate connector connectivity
+      description: Validates connectivity to a connector
+      tags: [Connector Management]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                connectorid:
+                  type: integer
+                  description: ID of the connector
+                connectortype:
+                  type: string
+                  description: Type of the connector
+                apikey:
+                  type: string
+                  description: API key for the connector
+                username:
+                  type: string
+                  description: Username for database connection
+                dbhost:
+                  type: string
+                  description: Database host
+                dbport:
+                  type: string
+                  description: Database port
+                dbname:
+                  type: string
+                  description: Database name
+                tablename:
+                  type: string
+                  description: Table name
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Connector connectivity validated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  connected:
+                    type: boolean
+                    description: Whether the connector is connected
+
+  # ========================================
   # TOKENIZATION MANAGEMENT
   # ========================================
   /v2/TokenCreate:
@@ -1405,6 +2709,37 @@ paths:
                     type: string
                     description: The original sensitive data
 
+  /v2/TokenDelete:
+    post:
+      summary: Delete token
+      description: Deletes a token and its associated data
+      tags: [Tokenization Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  description: The token to delete
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Token deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
   /v2/TokenCreateBulk:
     post:
       summary: Create multiple tokens in bulk
@@ -1439,7 +2774,7 @@ paths:
                   description: Time period for token validity
                 finaltime:
                   type: string
-                  description: Absolute expiration time for the tokens (Unix timestamp format)
+                  description: Absolute expiration time for the tokens
                 request_metadata:
                   type: object
                   description: Additional metadata for the request
@@ -1600,6 +2935,129 @@ paths:
                           type: string
                           description: Description of the group
 
+  /v2/GroupUpdate:
+    post:
+      summary: Update group
+      description: Updates an existing group
+      tags: [Group Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupid]
+              properties:
+                groupid:
+                  type: integer
+                  description: ID of the group to update
+                groupname:
+                  type: string
+                  description: New name of the group
+                groupdesc:
+                  type: string
+                  description: New description of the group
+                grouptype:
+                  type: string
+                  description: New type of the group
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Group updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/GroupDelete:
+    post:
+      summary: Delete group
+      description: Deletes a group
+      tags: [Group Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupid]
+              properties:
+                groupid:
+                  type: integer
+                  description: ID of the group to delete
+                groupname:
+                  type: string
+                  description: Name of the group (for verification)
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Group deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/GroupListUserGroups:
+    post:
+      summary: List user groups
+      description: Lists all groups for a specific user
+      tags: [Group Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User groups retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        groupid:
+                          type: integer
+                          description: ID of the group
+                        groupname:
+                          type: string
+                          description: Name of the group
+                        groupdesc:
+                          type: string
+                          description: Description of the group
+
   /v2/GroupAddUser:
     post:
       summary: Add user to group
@@ -1638,6 +3096,47 @@ paths:
       responses:
         '200':
           description: User added to group successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/GroupDeleteUser:
+    post:
+      summary: Remove user from group
+      description: Removes a user from a specific group
+      tags: [Group Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                groupid:
+                  type: integer
+                  description: ID of the group
+                groupname:
+                  type: string
+                  description: Name of the group
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User removed from group successfully
           content:
             application/json:
               schema:
@@ -1686,6 +3185,43 @@ paths:
                   roleid:
                     type: integer
                     description: ID of the created role
+
+  /v2/RoleUpdate:
+    post:
+      summary: Update role
+      description: Updates an existing role
+      tags: [Role Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [roleid]
+              properties:
+                roleid:
+                  type: integer
+                  description: ID of the role to update
+                rolename:
+                  type: string
+                  description: New name of the role
+                roledesc:
+                  type: string
+                  description: New description of the role
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
 
   /v2/PolicyCreate:
     post:
@@ -1976,7 +3512,7 @@ paths:
                   description: Name of the role
                 finaltime:
                   type: string
-                  description: Absolute expiration time for the token (Unix timestamp format)
+                  description: Absolute expiration time for the token
                 slidingtime:
                   type: string
                   description: Sliding time period for the token
@@ -2305,7 +3841,7 @@ paths:
                   description: Application name for app-specific data
                 finaltime:
                   type: string
-                  description: Expiration time for the shared record (Unix timestamp format)
+                  description: Expiration time for the shared record
                 request_metadata:
                   type: object
                   description: Additional metadata for the request
@@ -2357,6 +3893,161 @@ paths:
                   data:
                     type: object
                     description: Shared record data
+
+  # ========================================
+  # SESSION MANAGEMENT
+  # ========================================
+  /v2/SessionUpsert:
+    post:
+      summary: Upsert session
+      description: Creates or updates a user session
+      tags: [Session Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionuuid, sessiondata]
+              properties:
+                sessionuuid:
+                  type: string
+                  description: UUID of the session
+                sessiondata:
+                  type: object
+                  description: Session data
+                  additionalProperties: true
+                slidingtime:
+                  type: string
+                  description: Sliding time period for session validity
+                finaltime:
+                  type: string
+                  description: Absolute expiration time for the session
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Session upserted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/SessionDelete:
+    post:
+      summary: Delete session
+      description: Deletes a user session
+      tags: [Session Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionuuid]
+              properties:
+                sessionuuid:
+                  type: string
+                  description: UUID of the session to delete
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Session deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /v2/SessionListUserSessions:
+    post:
+      summary: List user sessions
+      description: Lists all sessions for a specific user
+      tags: [Session Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode, identity]
+              properties:
+                mode:
+                  type: string
+                  enum: [login, token, email, phone, custom]
+                  description: Mode of user identification
+                identity:
+                  type: string
+                  description: User identifier corresponding to the mode
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: User sessions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  rows:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        sessionuuid:
+                          type: string
+                          description: UUID of the session
+                        sessiondata:
+                          type: object
+                          description: Session data
+
+  /v2/SessionGet:
+    post:
+      summary: Get session
+      description: Retrieves information about a specific session
+      tags: [Session Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionuuid]
+              properties:
+                sessionuuid:
+                  type: string
+                  description: UUID of the session
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Session retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  sessiondata:
+                    type: object
+                    description: Session data
 
   # ========================================
   # SYSTEM OPERATIONS
@@ -2620,6 +4311,10 @@ tags:
     description: Operations for managing legal basis for data processing
   - name: Agreement Management
     description: Operations for managing user agreements and consent
+  - name: Processing Activity Management
+    description: Operations for managing data processing activities
+  - name: Connector Management
+    description: Operations for managing external data connectors
   - name: Tokenization Management
     description: Operations for tokenizing sensitive data
   - name: Group Management
@@ -2638,5 +4333,7 @@ tags:
     description: Operations for managing multi-tenant setups
   - name: Shared Records
     description: Operations for creating and accessing shared user records
+  - name: Session Management
+    description: Operations for managing user sessions
   - name: System Operations
     description: Operations for system administration and monitoring
