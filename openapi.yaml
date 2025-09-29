@@ -991,10 +991,10 @@ paths:
                       type: object
                       description: User request information
 
-  /v2/BulkListAuditEvents:
+  /v2/BulkListAllAuditEvents:
     post:
-      summary: List audit events in bulk
-      description: Lists audit events using the bulk unlock mechanism
+      summary: List all audit events in bulk
+      description: Lists all audit events using the bulk unlock mechanism
       tags: [Bulk Operations]
       requestBody:
         required: true
