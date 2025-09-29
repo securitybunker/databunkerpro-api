@@ -4198,9 +4198,16 @@ paths:
         '200':
           description: User HTML report generated successfully
           content:
-            text/html:
+            application/json:
               schema:
-                type: string
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  html:
+                    type: string
+                    description: HTML content of the user report
                 description: HTML report content
 
 components:
