@@ -298,6 +298,77 @@ paths:
                     type: string
                     example: "ok"
 
+  /v2/UserDeleteBulk:
+    post:
+      summary: Delete multiple users
+      description: Deletes multiple users and their associated data in bulk
+      tags: [User Management]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [users]
+              properties:
+                users:
+                  type: array
+                  description: Array of user identifiers to delete
+                  items:
+                    type: object
+                    properties:
+                      mode:
+                        type: string
+                        description: User identification mode (email, phone, login, token)
+                        enum: [email, phone, login, token]
+                      identity:
+                        type: string
+                        description: User identifier value
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: Users deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  total:
+                    type: integer
+                    description: Original total number of users to delete
+                  deleted:
+                    type: integer
+                    description: Number of unique users successfully deleted
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /v2/UserSearch:
     post:
       summary: Search users
@@ -4256,6 +4327,61 @@ paths:
                     type: string
                     description: HTML content of the user report
                 description: HTML report content
+
+  /v2/SystemSetLicenseKey:
+    post:
+      summary: Set license key
+      description: Sets the license key for the system
+      tags: [System Operations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [licensekey]
+              properties:
+                licensekey:
+                  type: string
+                  description: The license key to set
+                request_metadata:
+                  type: object
+                  description: Additional metadata for the request
+      responses:
+        '200':
+          description: License key set successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
 components:
   securitySchemes:
