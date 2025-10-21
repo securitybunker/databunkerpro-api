@@ -340,7 +340,7 @@ paths:
                     example: "ok"
                   total:
                     type: integer
-                    description: Original total number of users to delete
+                    description: Original number of users to delete
                   deleted:
                     type: integer
                     description: Number of unique users successfully deleted
