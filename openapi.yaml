@@ -111,7 +111,7 @@ paths:
                     example: "ok"
                   token:
                     type: string
-                    description: User's unique token
+                    description: User's unique token in UUID format
 
   /v2/UserGet:
     post:
@@ -132,7 +132,7 @@ paths:
                   description: Mode of user identification
                 identity:
                   type: string
-                  description: User identifier corresponding to the mode
+                  description: User identifier corresponding to the mode, i.e. email value
                 version:
                   type: integer
                   description: Specific version of the user profile to retrieve
